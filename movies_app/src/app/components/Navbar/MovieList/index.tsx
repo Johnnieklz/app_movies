@@ -2,17 +2,10 @@
 import { useEffect, useState } from 'react';
 import './index.scss';
 import axios from 'axios';
-
-export interface MovieType {
-  id: number;
-  title: string;
-  poster_path: string;
-  overview: string;
-  vote_average: number;
-}
+import { Movie } from '@/app/types/movie';
 
 export default function MovieList() {
-  const [movies, setMovies] = useState<MovieType[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
 
   useEffect(() => {
     getMovies();
@@ -26,33 +19,40 @@ export default function MovieList() {
           language: 'pt-BR',
         },
       });
-      setMovies(response.data.results);
-      console.log(response.data.results);
+
+      console.log("Dados da API:", response.data); // Verifica a resposta completa
+      console.log("Filmes recebidos:", response.data.results); // Verifica a lista de filmes
+
+      setMovies(response.data.results || []); // Evita problemas caso `results` seja undefined
     } catch (error) {
-      console.error('Failed to fetch movies:', error);
+      console.error('Erro ao buscar filmes:', error);
     }
   };
 
   return (
     <ul className="movie-list">
-      {movies.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} />
-      ))}
+      {movies.map((movie) => {
+        console.log("Filme enviado para MovieCard:", movie); // ✅ Log para depuração
+        return <MovieCard key={movie.id} movie={movie} />;
+      })}
     </ul>
   );
 }
 
 interface MovieCardProps {
-  movie: MovieType;
+  movie: Movie;
 }
 
 function MovieCard({ movie }: MovieCardProps) {
   return (
     <li className="movie-card">
-      <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} />
-      <h3>{movie.title}</h3>
-      <p>{movie.overview}</p>
-      <span>Nota: {movie.vote_average}</span>
+      <img
+        src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : "/placeholder.jpg"}
+        alt={movie.title ?? "Título não disponível"}
+      />
+      <h3>{movie.title ?? "Título desconhecido"}</h3>
+      <p>{movie.overview ?? "Descrição não disponível"}</p>
+      <span>Nota: {movie.vote_average !== undefined ? movie.vote_average : "Sem avaliação"}</span>
     </li>
   );
 }
